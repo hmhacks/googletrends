@@ -8,13 +8,15 @@ import pandas as pd
 import csv
 import time
 
-# inflation_and_prices1 = bls.get_series('CUUR0000SA0', 2004, 2013)
-# df = pd.DataFrame(inflation_and_prices1)
-#
-# print(df)
+inflation_and_prices1 = bls.get_series('CUUR0000SA0', 2004, 2013)
+df = pd.DataFrame(inflation_and_prices1)
 
-#Unemployment by state and industry
-#   Splitting into two df's allows the bypass of BLS API requirements
+print(df)
+
+df.to_csv('./Data/ExtractedUnemployment.csv', index=True)
+
+Unemployment by state and industry
+  Splitting into two df's allows the bypass of BLS API requirements
 
 def getStateList():
     """
@@ -64,7 +66,7 @@ def getIndustryList():
 def unemployment():
     """
     State and Area Employment, Hours, and Earnings
-    Returns a Pandas df with state-industry-level unemployment rates between 2004 and 2020.
+    Returns a csv with state-industry-level unemployment rates between 2004 and 2020.
     """
     state_list = list(getStateList().values())
     industry_list = list(getIndustryList().values())
@@ -78,11 +80,12 @@ def unemployment():
             if iter < 450:
                 try :
                     series = "SMU" + state + "00000" + industry +"01"
-                    print(series)
+                    # print(series)
                     # Series Query
                     unemployment1 = bls.get_series(series, 2004, 2020)
                     df = pd.DataFrame(unemployment1)
                     accum = accum.append(df)
+                    time.sleep(2)
 
                 except:
                     pass
@@ -94,11 +97,4 @@ def unemployment():
 
             iter += 1
 
-    return accum
-
-
-
-
-
-# print(unemployment())
-#work on downstream datawork
+    accum.to_csv('./Data/ExtractedUnemployment.csv', index=True)
