@@ -99,4 +99,7 @@ def makeRequest(term, yearStart, yearEnd, stateQuery):
 if __name__ == "__main__":
     # getGoogleTrends(['unemployment', 'ebay', 'mens underwear'], 2015, 2019)
     # getGoogleTrends(['cheap gym', 'online masters', 'brownie recipe'], 2015, 2019)
-    getGoogleTrends(['coursera', 'how to bake bread', 'google flights'], 2015, 2019)
+    # getGoogleTrends(['coursera', 'how to bake bread', 'google flights'], 2015, 2019)
+    # getGoogleTrends(['spider solitaire', 'candy crush', 'harry potter'], 2015, 2019)
+
+    # getGoogleTrends(['how to write a cover letter', 'resume', 'indeed'], 2015, 2019)

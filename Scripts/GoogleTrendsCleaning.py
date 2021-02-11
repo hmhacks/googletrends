@@ -4,27 +4,31 @@ import pandas as pd
 path = "../Data/SearchTerms/"
 dirs = os.listdir(path)
 
-def appendAllSearch():
+def mergeAllSearch():
     """
     Merges all Google search query data from local directory.
 
-    Procedure that produces csv with all search terms
+    Procedure that produces csv with all search terms, merged on state/date.
     """
     iter = 0
     accum = pd.DataFrame()
     for file in dirs:
-        print(file)
         input = "../Data/SearchTerms/" + file
         data = pd.read_csv(input)
+
+        if 'isPartial' in data:
+            data = data.drop(['isPartial'], axis =1)
+
         if iter == 0:
-            accum.append(data)
+            accum = data
         else:
-            data.append(data)
+            accum = pd.merge(accum, data, on = ['State', 'date'])
 
-    print(data.head())
+        iter += 1
+
+    print(accum.head())
     filename = '../Data/allSearchTerms.csv'
-    data.to_csv(filename, index=True, encoding='utf_8_sig')
-    # return data
+    accum.to_csv(filename, index=True, encoding='utf_8_sig')
 
-
-appendAllSearch()
+if __name__ == "__main__":
+    mergeAllSearch()
