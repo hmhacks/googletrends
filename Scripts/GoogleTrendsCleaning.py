@@ -1,3 +1,9 @@
+"""
+This module cleans and merges scraped Google Trends data.
+
+Henry Manley - hjm67@cornell.edu -  Last Modified 2/11/2021
+"""
+
 import os, sys
 import pandas as pd
 
@@ -22,13 +28,10 @@ def mergeAllSearch():
         if iter == 0:
             accum = data
         else:
-            accum = pd.merge(accum, data, on = ['State', 'date'])
+            accum = pd.merge(accum, data, on = ['State', 'date'], how = 'outer')
 
         iter += 1
 
     print(accum.head())
     filename = '../Data/allSearchTerms.csv'
     accum.to_csv(filename, index=True, encoding='utf_8_sig')
-
-if __name__ == "__main__":
-    mergeAllSearch()

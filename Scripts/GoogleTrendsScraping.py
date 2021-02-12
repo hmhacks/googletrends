@@ -6,6 +6,7 @@ Henry Manley - hjm67@cornell.edu -  Last Modified 2/8/2021
 from pytrends.request import TrendReq
 import time
 import pandas as pd
+import GoogleTrendsCleaning as GTC
 
 pytrends = TrendReq()
 
@@ -92,14 +93,17 @@ def makeRequest(term, yearStart, yearEnd, stateQuery):
          gprop='')
 
     data = pytrends.interest_over_time()
-    # data= data.drop(labels=['isPartial'],axis='columns')
+    time.sleep(1)
 
     return data
 
 if __name__ == "__main__":
     # getGoogleTrends(['unemployment', 'ebay', 'mens underwear'], 2015, 2019)
-    # getGoogleTrends(['cheap gym', 'online masters', 'brownie recipe'], 2015, 2019)
+    # getGoogleTrends(['cheap gym', 'online masters', 'brownie recipe', 'how to write a cover letter'], 2015, 2019)
     # getGoogleTrends(['coursera', 'how to bake bread', 'google flights'], 2015, 2019)
     # getGoogleTrends(['spider solitaire', 'candy crush', 'harry potter'], 2015, 2019)
+    # getGoogleTrends(['porn', 'resume', 'indeed'], 2015, 2019)
+    # getGoogleTrends(['pornhub', 'linkedin'], 2015, 2019)
+    # getGoogleTrends(['harvard', 'highest paying jobs'], 2015, 2019)
 
-    # getGoogleTrends(['how to write a cover letter', 'resume', 'indeed'], 2015, 2019)
+    GTC.mergeAllSearch()

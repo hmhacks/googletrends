@@ -7,7 +7,7 @@ import bls
 import pandas as pd
 import csv
 import time
-
+import BLSCleaning as BLSC
 # Demo
 # inflation_and_prices1 = bls.get_series('SMU00000000000000001', 2004, 2013)
 # df = pd.DataFrame(inflation_and_prices1)
@@ -117,17 +117,24 @@ def unemployment():
         print(series)
 
         # Series Query
-        unemployment1 = bls.get_series(series, 2011, 2020)
+        unemployment1 = bls.get_series(series, 2015, 2020)
         df = pd.DataFrame(unemployment1)
         accum = accum.append(df)
         accum['State'] = mapState(state)
 
         master = master.append(accum)
         accum = pd.DataFrame()
-        time.sleep(2)
+
+        iter +=1
+
+        if iter == 20:
+            time.sleep(50000)
+            iter == 0
+
 
     master.to_csv('../Data/BLS/' + series + '.csv', index=True)
 
 
 if __name__ == "__main__":
     unemployment()
+    BLSC.mergeAllBLS()
