@@ -19,6 +19,7 @@ def mergeAllSearch():
     iter = 0
     accum = pd.DataFrame()
     for file in dirs:
+        print(file)
         input = "../Data/SearchTerms/" + file
         data = pd.read_csv(input)
 

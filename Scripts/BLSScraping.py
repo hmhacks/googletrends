@@ -101,11 +101,12 @@ def unemployment():
     state_list = list(getStateList().values())
     state_list = state_list[1:-3]
 
-    prefix = 'SM'
-    seasonal = 'U'
+    prefix = 'LN'
+    seasonal = 'S'
     area = '00000'
     industry = '00000000'
     data_type = '01'
+    LNS12300000
 
     master = pd.DataFrame()
     iter = 0

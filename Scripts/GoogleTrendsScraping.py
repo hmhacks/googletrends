@@ -85,25 +85,45 @@ def makeRequest(term, yearStart, yearEnd, stateQuery):
     Parameter stateQuery is the state parameter being requested
     Preconditon: stateQuery is a string of format "US-NY", eg.
     """
-    pytrends.build_payload(
-         kw_list=term,
-         cat=0,
-         timeframe=  str(yearStart) + '-01-01 ' + str(yearEnd) + '-01-01',
-         geo=stateQuery,
-         gprop='')
+    try:
+        pytrends.build_payload(
+             kw_list=term,
+             cat=0,
+             timeframe=  str(yearStart) + '-01-01 ' + str(yearEnd) + '-01-01',
+             geo=stateQuery,
+             gprop='')
+
+    except requests.exceptions.Timeout:
+        print("Timeout occured")
+
 
     data = pytrends.interest_over_time()
-    time.sleep(1)
 
     return data
 
+    # https://github.com/mdroste/stata-pylearn
+    # state, year, calendar, interactions of those things (year x region)
+
 if __name__ == "__main__":
-    # getGoogleTrends(['unemployment', 'ebay', 'mens underwear'], 2015, 2019)
+    # getGoogleTrends(['unemployment'], 2011, 2019)
+    # getGoogleTrends(['spider solitaire'], 2011, 2019)
+    # getGoogleTrends(['porn'], 2011, 2019)
+    getGoogleTrends(['google flights'], 2011, 2019)
+
+
+    # getGoogleTrends(['unemployment', 'ebay', 'mens underwear', 'pornhub'], 2015, 2019)
     # getGoogleTrends(['cheap gym', 'online masters', 'brownie recipe', 'how to write a cover letter'], 2015, 2019)
     # getGoogleTrends(['coursera', 'how to bake bread', 'google flights'], 2015, 2019)
     # getGoogleTrends(['spider solitaire', 'candy crush', 'harry potter'], 2015, 2019)
     # getGoogleTrends(['porn', 'resume', 'indeed'], 2015, 2019)
+    # getGoogleTrends(['linkedin'], 2015, 2019)
+    # getGoogleTrends(['harvard'], 2015, 2019)
+    # getGoogleTrends(['jobs near me'], 2015, 2019)
+    # getGoogleTrends(['blood drive', 'jobs near me'], 2015, 2019)
+    # getGoogleTrends(['xbox'], 2015, 2019)
+    # getGoogleTrends(['highest paying jobs'], 2015, 2019)
     # getGoogleTrends(['pornhub', 'linkedin'], 2015, 2019)
-    # getGoogleTrends(['harvard', 'highest paying jobs'], 2015, 2019)
-
-    GTC.mergeAllSearch()
+    # getGoogleTrends(['highest paying jobs'], 2015, 2019)
+    # getGoogleTrends(['slutload', 'omegle'], 2015, 2019)
+    # time.sleep(10)
+    # GTC.mergeAllSearch()
