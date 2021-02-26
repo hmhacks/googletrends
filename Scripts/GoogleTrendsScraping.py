@@ -98,17 +98,28 @@ def makeRequest(term, yearStart, yearEnd, stateQuery):
 
 
     data = pytrends.interest_over_time()
-
     return data
 
     # https://github.com/mdroste/stata-pylearn
-    # state, year, calendar, interactions of those things (year x region)
 
 if __name__ == "__main__":
     # getGoogleTrends(['unemployment'], 2011, 2019)
     # getGoogleTrends(['spider solitaire'], 2011, 2019)
-    # getGoogleTrends(['porn'], 2011, 2019)
-    getGoogleTrends(['google flights'], 2011, 2019)
+    # getGoogleTrends(['pornhub'], 2011, 2019)
+    # getGoogleTrends(['google flights'], 2011, 2019)
+    # getGoogleTrends(['jobs near me'], 2011, 2019)
+    # getGoogleTrends(['omegle'], 2011, 2019)
+    # getGoogleTrends(['candy crush'], 2011, 2019)
+    # getGoogleTrends(['linkedin'], 2011, 2019)
+    # getGoogleTrends(['xbox'], 2011, 2019)
+    # getGoogleTrends(['harvard'], 2011, 2019)
+    # getGoogleTrends(['brownie recipe'], 2011, 2019)
+    # getGoogleTrends(['blood drive'], 2011, 2019)
+    # getGoogleTrends(['resume template'], 2011, 2019)
+    # getGoogleTrends(['slutload'], 2011, 2019)
+    # getGoogleTrends(['ebay'], 2011, 2019)
+
+
 
 
     # getGoogleTrends(['unemployment', 'ebay', 'mens underwear', 'pornhub'], 2015, 2019)
@@ -126,4 +137,4 @@ if __name__ == "__main__":
     # getGoogleTrends(['highest paying jobs'], 2015, 2019)
     # getGoogleTrends(['slutload', 'omegle'], 2015, 2019)
     # time.sleep(10)
-    # GTC.mergeAllSearch()
+    GTC.mergeAllSearch()

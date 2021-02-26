@@ -1,30 +1,28 @@
 
-import delimited "/Users/henrymanley/Downloads/bf1acd2290e15b91e6710b6fd3be0a53-11d15233327c8080c9646c7e1f23052659db251d/us-state-ansi-fips.csv", clear 
-rename stusps state 
+import delimited "/Users/henrymanley/Downloads/bf1acd2290e15b91e6710b6fd3be0a53-11d15233327c8080c9646c7e1f23052659db251d/us-state-ansi-fips.csv", clear
+rename stusps state
 replace state = subinstr(state, " ","",.)
 tempfile working
 save `working',replace
 
-import delimited "/Users/henrymanley/Desktop/Research/googletrends/Data/allSearchTerms.csv", encoding(UTF-8) clear 
+import delimited "/Users/henrymanley/Desktop/Research/googletrends/Data/allSearchTerms.csv", encoding(UTF-8) clear
 gen month = substr(date, 6,2)
 gen year = substr(date,1, 4)
 destring month, replace
 destring year, replace
 merge m:1 state using `working'
-drop _me 
+drop _me
 rename unemployment google_unemployment
 rename st fips
 
-***
-*by month calculations
-sort state year month
-by state year month: egen groupmean=mean(google_unemployment)
-duplicates drop month year fips, force
-***
-
+// ***
+// *by month calculations
+// sort state year month
+// by state year month: egen groupmean=mean(google_unemployment)
+// duplicates drop month year fips, force
+// ***
 
 save `working', replace
-
 
 import excel "/Users/henrymanley/Desktop/Research/googletrends/TESTING.xlsx", sheet("ststdsadata") clear
 rename A fips
@@ -33,7 +31,7 @@ rename C year
 rename D month
 rename E civ_pop
 rename F civ_pop_working_age
-rename G percent_working_age 
+rename G percent_working_age
 rename H employed
 rename I percent_employed
 rename J unemployed
@@ -60,72 +58,60 @@ merge 1:1 month year fips using `working', force
 
 
 keep if _me ==3
+export delimited using "workingData", replace
+
 
 set graphics off
 global images "/Users/henrymanley/Desktop/Research/googletrends/Images"
 
 sort stname
-levelsof stname, local(st_list)
+// levelsof stname, local(st_list)
+local st_list = `" "Alabama" "Texas" "Florida" "Illinois" "California" "'
+local terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload"
 
-qui{
 	foreach sta of local st_list{
-	cap drop x
-	cap drop y
-	regress unemployment_rate google_unemployment if stname == "`sta'"
-	local r2 = `e(r2)'
-	predict x
-	
-	
-	regress unemployment_rate spidersolitaire if stname == "`sta'"
-	local r3 = `e(r2)'
-	predict y
-	
-	twoway ///
-		(scatter unemployment_rate google_unemployment if stname == "`sta'") ///
-		(line x google_unemployment if stname == "`sta'", title("`sta' Monthly Google Search for 'Unemployment' vs. EPOP Rate", size(medium)) legend(off) xtitle("Google Searches for 'Unemployment'") ytitle("EPOP") caption("R2 = `r2'") graphregion(color(white)) plotregion(color(white))) ///
-		(lpoly unemployment_rate google_unemployment if stname == "`sta'")
-		
-		graph export "$images/`sta'_goog1.png", replace height(350) width(500)
-		
-		twoway ///
-		(scatter unemployment_rate spidersolitaire if stname == "`sta'") ///
-		(line y spidersolitaire if stname == "`sta'", title("`sta' Monthly Google Search for 'Spider Solitaire' vs. EPOP Rate", size(medium)) legend(off) xtitle("Google Searches for 'Spider Solitaire'") ytitle("EPOP") caption("R2 = `r3'") graphregion(color(white)) plotregion(color(white))) ///
-		(lpoly unemployment_rate spidersolitaire if stname == "`sta'")
-		
-		graph export "$images/`sta'_goog2.png", replace height(350) width(500) 
+		foreach term of local terms {
+			regress unemployment_rate `term' if stname == "`sta'", robust
+			predict `term'_p_`sta'
+			local r2 = round(`e(r2)', 0.001)
 
-	twoway ///
-		(scatter unemployment_rate date if stname == "`sta'") ///
-		(scatter google_unemployment date if stname == "`sta'", title("`sta' Trends Over Time") graphregion(color(white)) plotregion(color(white))) ///
-		(scatter spidersolitaire date if stname == "`sta'")
-		graph export "$images/`sta'_goog3.png", replace height(350) width(500)
-}
-}
+
+			twoway ///
+				(lpolyci unemployment_rate `term' if stname == "`sta'", degree(3) kernel(epan2)) ///
+				(scatter unemployment_rate `term' if stname == "`sta'") ///
+				(line `term'_p_`sta' `term' if stname == "`sta'", title("`sta' Monthly Google Search for '`term'' vs. EPOP Rate", size(medium)) xtitle("Google Searches for "`term'"") ytitle("EPOP") caption("R2 Linear = `r2'") graphregion(color(white)) plotregion(color(white)) legend(label(1 "Nonparametric CI") label(2 "Nonparametric") label(3 "") label(4 "Linear")))
+
+
+			graph export "$images/`sta'_`term'_goog.png", replace height(350) width(500)
+
+		}
+	}
 
 
 cd "$images"
 putpdf begin
 	putpdf paragraph
-	levelsof stname, local(st_list)
 
 	foreach sta of local st_list{
-		putpdf image "$images/`sta'_goog1.png"
-		putpdf image "$images/`sta'_goog2.png"
-		putpdf image "$images/`sta'_goog3.png"
-}
-		
-	
-	putpdf save "$images/Controls.pdf", replace
-	
-	
-	
-	
-	
-	
-	
-	
-		
+		foreach term of local terms {
+				putpdf image "$images/`sta'_`term'_goog.png"
+		}
 
+}
+	putpdf save "$images/Controls.pdf", replace
+
+
+foreach sta of local st_list{
+		foreach term of local terms {
+			erase  "$images/`sta'_`term'_goog.png"
+		}
+}
+
+
+
+
+
+	pca spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload
 
 
 *identify different states where "unemployment" does predict!
@@ -133,16 +119,3 @@ putpdf begin
 *initial claims?
 *ICSA in Fred
 *lets do the next round --> by state, just "unemployment"
-
-// drop _me 
-
-// gen p_rate = rate / 6.4
-// gen p_bra = bra / 63
-// gen p_under = under /11
-// gen p_bath = bath / 37
-
-// graph tw ///
-// (scatter p_rate date) ///
-// (line p_bra date) ///
-// (line p_under date) ///
-// (line p_bath date)
