@@ -58,7 +58,7 @@ merge 1:1 month year fips using `working', force
 
 
 keep if _me ==3
-export delimited using "workingData", replace
+export delimited using "/Users/henrymanley/Desktop/Research/googletrends/Data/workingData", replace
 
 
 set graphics off
