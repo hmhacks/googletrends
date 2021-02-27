@@ -67,7 +67,7 @@ global images "/Users/henrymanley/Desktop/Research/googletrends/Images"
 sort stname
 // levelsof stname, local(st_list)
 local st_list = `" "Alabama" "Texas" "Florida" "Illinois" "California" "'
-local terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload"
+local terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload calvinklein"
 
 	foreach sta of local st_list{
 		foreach term of local terms {

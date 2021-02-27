@@ -1,6 +1,9 @@
 # googletrends
 Predicting labor market measures with trends in Google search queries.
 
+
+<img src="/Analysis/Visualization/scatter.gif" width="400" height="400" />
+
 ## Data
 * Unemployment and labor market measures from the [US Bureau of Labor Statistics](https://www.bls.gov/).
 * Google search query data from [Google Trends](https://trends.google.com/trends/?geo=US).

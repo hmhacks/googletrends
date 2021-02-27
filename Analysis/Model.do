@@ -1,14 +1,11 @@
+// ssc install lassopack
+// ssc install pdslasso
 
-import delimited "/..Data/allSearchTerms.csv", encoding(UTF-8) clear
-gen time = date(date, "YMD")
-format time %td
-drop date v1
+import delimited "/Users/henrymanley/Desktop/Research/googletrends/Data/workingData.csv", clear
+drop _me stname
 
-global regressors = "brownierecipe candycrush cheapgym coursera ebay googleflights harrypotter howtobakebread mensunderwear onlinemasters spidersolitaire"
-*xtset
 
-matrix accum R = $regressors, nocons dev
-matrix R = corr(R)
+global terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload calvinklein"
 
-* Model
-reg unemployment $regressors i.state time, robust
+
+pdslasso unemployment_rate (c.($terms)##c.($terms))
