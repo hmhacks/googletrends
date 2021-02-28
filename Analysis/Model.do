@@ -9,3 +9,4 @@ global terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrus
 
 
 elasticnet linear unemployment_rate $terms $iterms if state =="California"
+coefpath
