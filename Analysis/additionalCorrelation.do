@@ -58,6 +58,9 @@ merge 1:1 month year fips using `working', force
 
 
 keep if _me ==3
+
+
+
 export delimited using "/Users/henrymanley/Desktop/Research/googletrends/Data/workingData", replace
 
 
@@ -66,8 +69,24 @@ global images "/Users/henrymanley/Desktop/Research/googletrends/Images"
 
 sort stname
 // levelsof stname, local(st_list)
-local st_list = `" "Alabama" "Texas" "Florida" "Illinois" "California" "'
+local st_list = `"  "Texas"  "'
 local terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload calvinklein"
+
+foreach sta of local st_list{
+summ unemployment_rate if stname == "`sta'"
+gen rel_unemployment = 0
+replace rel_unemployment = 100* unemployment_rate/`r(max)' if stname =="`sta'"
+}
+
+foreach sta of local st_list{
+		scatter rel_unemployment googleflights google_unemployment slutload date if stname=="`sta'", ///
+		graphregion(color(white)) plotregion(color(white)) ///
+		title("`sta' Time Series. Relative Unemployment and Google Searches 2011 - 2019", size(medium))
+		graph export "$images/`sta'_timeSeries.png", replace height(350) width(500)
+}
+	
+
+
 
 	foreach sta of local st_list{
 		foreach term of local terms {
@@ -90,9 +109,13 @@ local terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush
 
 cd "$images"
 putpdf begin
-	putpdf paragraph
+	putpdf paragraph, font("Garamond",20) halign(center)
 
 	foreach sta of local st_list{
+		putpdf text ("`sta'")
+		putpdf pagebreak
+		putpdf paragraph
+		putpdf image "$images/`sta'_timeSeries.png",
 		foreach term of local terms {
 				putpdf image "$images/`sta'_`term'_goog.png"
 		}
@@ -111,7 +134,7 @@ foreach sta of local st_list{
 
 
 
-	pca spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload
+// 	pca spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload
 
 
 *identify different states where "unemployment" does predict!

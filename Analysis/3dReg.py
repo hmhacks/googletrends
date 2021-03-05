@@ -23,11 +23,11 @@ def normal():
     threedee = plt.figure(figsize=(940/my_dpi, 840/my_dpi), dpi=my_dpi).gca(projection='3d')
     threedee.tick_params(colors="#1A1B41")
     threedee.grid(color='#1A1B41', linestyle='-', linewidth=0.5)
-    threedee.scatter(data['google_unemployment'], data['googleflights'], data['unemployment_rate'])
+    threedee.scatter(data['google_unemployment'], data['googleflights'], data['unemployment_rate'], color = "#00A6A6")
     threedee.set_xlabel('"unemployment"')
     threedee.set_ylabel('"google flights"')
     threedee.set_zlabel('EPOP')
-    plt.title("Google Searches for 'Unemployment' and 'Google Flights' vs. EPOP" + " (" + str(state)+ ")")
+    plt.title("Google Searches for 'Unemployment' and 'Google Flights' vs. EPOP" + " (" + str(state)+ ")", fontweight="bold")
     plt.show()
 
 def vis():
@@ -38,11 +38,11 @@ def vis():
         threedee = plt.figure(figsize=(940/my_dpi, 840/my_dpi), dpi=my_dpi).gca(projection='3d')
         threedee.tick_params(colors="#1A1B41")
         threedee.grid(color='#1A1B41', linestyle='-', linewidth=0.5)
-        threedee.scatter(data['google_unemployment'], data['googleflights'], data['unemployment_rate'])
+        threedee.scatter(data['google_unemployment'], data['googleflights'], data['unemployment_rate'], color = "#00A6A6")
         threedee.set_xlabel('"unemployment"')
         threedee.set_ylabel('"google flights"')
         threedee.set_zlabel('EPOP')
-        plt.title("Google Searches for 'Unemployment' and 'Google Flights' vs. EPOP" + " (" + str(state)+ ")")
+        # plt.title("Google Searches for 'Unemployment' and 'Google Flights' vs. EPOP" + " (" + str(state)+ ")", fontweight="bold")
         threedee.view_init(30,angle)
         filename= cwd +  '/Visualization/Image'+str(angle)+'.png'
         plt.savefig(filename, dpi=96)
@@ -52,6 +52,7 @@ def vis():
 def compileGif():
     path = cwd + "/Visualization"
     dirs = os.listdir(path)
+    os.chdir(path)
 
     bashCommand = "convert -delay 50 Image*.png scatter.gif"
     os.system(bashCommand)
