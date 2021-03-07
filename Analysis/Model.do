@@ -5,8 +5,8 @@ import delimited "/Users/henrymanley/Desktop/Research/googletrends/Data/workingD
 drop _me stname
 
 
-global terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload calvinklein"
+global terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload calvinklein"
 
 
-elasticnet linear unemployment_rate $terms $iterms if state =="California"
-coefpath
+xtset fips
+xteregress unemployment_rate i.fips $terms##$terms

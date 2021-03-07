@@ -123,7 +123,8 @@ if __name__ == "__main__":
     # getGoogleTrends(['calvin klein'], 2011, 2019)
 
     # getGoogleTrends(['vodka'], 2011, 2019)
-    getGoogleTrends(['jobs'], 2011, 2019)
+    # getGoogleTrends(['jobs'], 2011, 2019)
     # getGoogleTrends(['haircut'], 2011, 2019)
+    # getGoogleTrends(['lottery'], 2011, 2019)
 
-    # GTC.mergeAllSearch()
+    GTC.mergeAllSearch()

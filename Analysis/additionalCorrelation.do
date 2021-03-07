@@ -1,5 +1,21 @@
+/*
+This script returns a compressed pdf with user defined state/keyword scatter plots
+and time series. Namely, this file helps to visualize regressors.
 
-import delimited "/Users/henrymanley/Downloads/bf1acd2290e15b91e6710b6fd3be0a53-11d15233327c8080c9646c7e1f23052659db251d/us-state-ansi-fips.csv", clear
+ControlInteractions
+*/
+
+clear all
+
+local terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
+
+local st_list = `" "California" "'
+
+****
+
+
+*Builds the necessary dataset to visualize regressors
+import delimited "/Users/henrymanley/Desktop/Research/googletrends/Data/statefips.csv", clear
 rename stusps state
 replace state = subinstr(state, " ","",.)
 tempfile working
@@ -15,6 +31,7 @@ drop _me
 rename unemployment google_unemployment
 rename st fips
 
+*Smooth the time series (if needed)
 // ***
 // *by month calculations
 // sort state year month
@@ -55,58 +72,80 @@ duplicates drop month year fips, force
 save "unemploymentMaster", replace
 
 merge 1:1 month year fips using `working', force
-
-
 keep if _me ==3
+
+rename google_unemployment gunemployment
+
+
+*Generates interaction terms
+
+foreach term1 of local terms {
+	foreach term2 of local terms {
+		if `term1' != `term2' {
+			gen `term1'_`term2' = sqrt(`term1' * `term2')
+		}
+	}
+}
+
+save "unemploymentMaster", replace
 
 
 
 export delimited using "/Users/henrymanley/Desktop/Research/googletrends/Data/workingData", replace
-
-
 set graphics off
+
+
+program define StateTimeScatters
+
+local terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
+
+local st_list = `" "California" "'
+
+*Generates state level scatter plots
 global images "/Users/henrymanley/Desktop/Research/googletrends/Images"
 
 sort stname
 // levelsof stname, local(st_list)
-local st_list = `"  "Texas"  "'
-local terms = "spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload calvinklein"
 
+
+gen rel_unemployment = 0
 foreach sta of local st_list{
 summ unemployment_rate if stname == "`sta'"
-gen rel_unemployment = 0
 replace rel_unemployment = 100* unemployment_rate/`r(max)' if stname =="`sta'"
 }
 
 foreach sta of local st_list{
-		scatter rel_unemployment googleflights google_unemployment slutload date if stname=="`sta'", ///
+		scatter rel_unemployment googleflights gunemployment slutload date if stname=="`sta'", ///
 		graphregion(color(white)) plotregion(color(white)) ///
 		title("`sta' Time Series. Relative Unemployment and Google Searches 2011 - 2019", size(medium))
 		graph export "$images/`sta'_timeSeries.png", replace height(350) width(500)
 }
-	
 
 
-
-	foreach sta of local st_list{
-		foreach term of local terms {
-			regress unemployment_rate `term' if stname == "`sta'", robust
-			predict `term'_p_`sta'
-			local r2 = round(`e(r2)', 0.001)
-
-
-			twoway ///
-				(lpolyci unemployment_rate `term' if stname == "`sta'", degree(3) kernel(epan2)) ///
-				(scatter unemployment_rate `term' if stname == "`sta'") ///
-				(line `term'_p_`sta' `term' if stname == "`sta'", title("`sta' Monthly Google Search for '`term'' vs. EPOP Rate", size(medium)) xtitle("Google Searches for "`term'"") ytitle("EPOP") caption("R2 Linear = `r2'") graphregion(color(white)) plotregion(color(white)) legend(label(1 "Nonparametric CI") label(2 "Nonparametric") label(3 "") label(4 "Linear")))
+foreach sta of local st_list{
+	foreach term of local terms {
+		regress unemployment_rate `term' if stname == "`sta'", robust
+		predict `term'_p_`sta'
+		local r2 = round(`e(r2)', 0.001)
 
 
-			graph export "$images/`sta'_`term'_goog.png", replace height(350) width(500)
+		twoway ///
+			(lpolyci unemployment_rate `term' if stname == "`sta'", degree(3) kernel(epan2)) ///
+			(scatter unemployment_rate `term' if stname == "`sta'") ///
+			(line `term'_p_`sta' `term' if stname == "`sta'", ///
+				title("`sta' Monthly Google Search for '`term'' vs. EPOP Rate", size(medium)) ///
+				xtitle("Google Searches for "`term'"") ytitle("EPOP") caption("R2 Linear = `r2'") ///
+				graphregion(color(white)) plotregion(color(white)) ///
+				legend(label(1 "Nonparametric CI") label(2 "Nonparametric") ///
+				label(3 "") label(4 "Linear")))
+
+		graph export "$images/`sta'_`term'_goog.png", replace height(350) width(500)
 
 		}
 	}
 
 
+*Compresses the PDF
 cd "$images"
 putpdf begin
 	putpdf paragraph, font("Garamond",20) halign(center)
@@ -124,21 +163,81 @@ putpdf begin
 	putpdf save "$images/Controls.pdf", replace
 
 
+*Erases all local images
 foreach sta of local st_list{
 		foreach term of local terms {
 			erase  "$images/`sta'_`term'_goog.png"
 		}
 }
+end
 
 
+program define ControlInteractions
 
+local terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
+
+local st_list = `" "California" "'
+
+use "unemploymentMaster", clear
+
+*Visualizing the interaction terms
+foreach sta of local st_list {
+	foreach term1 of local terms {
+		foreach term2 of local terms {
+
+			if `term1' != `term2' {
+
+				regress unemployment_rate `term1'_`term2' if stname == "`sta'", robust
+				predict `term1'`term2'`sta'
+				local r2 = round(`e(r2)', 0.001)
+
+				twoway ///
+					(lpolyci unemployment_rate `term1'_`term2' if stname == "`sta'", degree(3) kernel(epan2)) ///
+					(scatter unemployment_rate `term1'_`term2' if stname == "`sta'") ///
+					(line `term1'`term2'`sta' `term1'_`term2' if stname == "`sta'", ///
+						title("`sta' Monthly Google Search for '`term1'_`term2'' vs. EPOP Rate", ///
+						size(medium)) xtitle("Google Searches for "`term1'_`term2'"") ytitle("EPOP") ///
+						caption("R2 Linear = `r2'") graphregion(color(white)) plotregion(color(white)) ///
+						legend(label(1 "Nonparametric CI") label(2 "Nonparametric") ///
+						label(3 "") label(4 "Linear")))
+
+				graph export "$images/`sta'_`term1'x`term2'_goog.png", replace height(350) width(500)
+
+			}
+		}
+	}
+}
+end
+
+
+// *Compresses the PDF
+// cd "$images"
+// putpdf begin
+// 	putpdf paragraph, font("Garamond",20) halign(center)
+
+// 	foreach sta of local st_list{
+// 		putpdf text ("`sta'")
+// 		putpdf pagebreak
+// 		putpdf paragraph
+// 		foreach term1 of local terms {
+// 			foreach term2 of local terms {
+// 				cap putpdf image "$images/`sta'_`term1'x`term2'_goog.png"
+// 		}
+// 	}
+// }
+// 	putpdf save "$images/interactionControls.pdf", replace
+
+
+// *Erases all local images
+// foreach sta of local st_list{
+// 		foreach term1 of local terms {
+// 			foreach term2 of local terms {
+// 					erase  "$images/`sta'_`term1'x`term2'_goog.png"
+// 		}
+// 	}
+// }
+
+// end
 
 
 // 	pca spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload
-
-
-*identify different states where "unemployment" does predict!
-*proof of concept
-*initial claims?
-*ICSA in Fred
-*lets do the next round --> by state, just "unemployment"
