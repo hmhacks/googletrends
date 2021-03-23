@@ -6,7 +6,7 @@ ControlInteractions
 */
 
 clear all
-
+global images "/Users/henrymanley/Desktop/Research/googletrends/Images"
 local terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
 
 local st_list = `" "California" "'
@@ -172,72 +172,72 @@ foreach sta of local st_list{
 end
 
 
-program define ControlInteractions
+
 
 local terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
 
 local st_list = `" "California" "'
 
 use "unemploymentMaster", clear
-
 *Visualizing the interaction terms
 foreach sta of local st_list {
 	foreach term1 of local terms {
 		foreach term2 of local terms {
 
 			if `term1' != `term2' {
-
+				
 				regress unemployment_rate `term1'_`term2' if stname == "`sta'", robust
-				predict `term1'`term2'`sta'
-				local r2 = round(`e(r2)', 0.001)
+				local name = "`term1'`term2'`sta'"
+				predict `name'
 
+				local r2 = round(`e(r2)', 0.001)
+				
 				twoway ///
 					(lpolyci unemployment_rate `term1'_`term2' if stname == "`sta'", degree(3) kernel(epan2)) ///
 					(scatter unemployment_rate `term1'_`term2' if stname == "`sta'") ///
-					(line `term1'`term2'`sta' `term1'_`term2' if stname == "`sta'", ///
+					(line `name' `term1'_`term2' if stname == "`sta'", ///
 						title("`sta' Monthly Google Search for '`term1'_`term2'' vs. EPOP Rate", ///
 						size(medium)) xtitle("Google Searches for "`term1'_`term2'"") ytitle("EPOP") ///
 						caption("R2 Linear = `r2'") graphregion(color(white)) plotregion(color(white)) ///
 						legend(label(1 "Nonparametric CI") label(2 "Nonparametric") ///
 						label(3 "") label(4 "Linear")))
-
-				graph export "$images/`sta'_`term1'x`term2'_goog.png", replace height(350) width(500)
-
+				graph export "$images/`sta'`term1'`term2'goog.png", replace
+				
 			}
 		}
 	}
 }
-end
+
+local terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
+
+local st_list = `" "California" "'
+*Compresses the PDF
+cd "$images"
+putpdf begin
+	putpdf paragraph, font("Garamond",20) halign(center)
+
+	foreach sta of local st_list{
+		putpdf text ("`sta'")
+		putpdf pagebreak
+		putpdf paragraph
+		foreach term1 of local terms {
+			foreach term2 of local terms {
+				cap putpdf image "$images/`sta'`term1'`term2'goog.png"
+		}
+	}
+}
+	putpdf save "$images/interactionControls.pdf", replace
 
 
-// *Compresses the PDF
-// cd "$images"
-// putpdf begin
-// 	putpdf paragraph, font("Garamond",20) halign(center)
+*Erases all local images
+foreach sta of local st_list{
+		foreach term1 of local terms {
+			foreach term2 of local terms {
+					cap erase  "$images/`sta'`term1'`term2'goog.png"
+		}
+	}
+}
 
-// 	foreach sta of local st_list{
-// 		putpdf text ("`sta'")
-// 		putpdf pagebreak
-// 		putpdf paragraph
-// 		foreach term1 of local terms {
-// 			foreach term2 of local terms {
-// 				cap putpdf image "$images/`sta'_`term1'x`term2'_goog.png"
-// 		}
-// 	}
-// }
-// 	putpdf save "$images/interactionControls.pdf", replace
-
-
-// *Erases all local images
-// foreach sta of local st_list{
-// 		foreach term1 of local terms {
-// 			foreach term2 of local terms {
-// 					erase  "$images/`sta'_`term1'x`term2'_goog.png"
-// 		}
-// 	}
-// }
-
-// end
 
 
 // 	pca spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay google_unemployment slutload

@@ -128,3 +128,173 @@ if __name__ == "__main__":
     # getGoogleTrends(['lottery'], 2011, 2019)
 
     GTC.mergeAllSearch()
+
+
+
+
+
+
+
+
+
+
+
+package linklist;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+
+class CListTest {
+
+    @Test
+    void testConstructor() {
+        CList<Integer> empty= new CList<>();
+        assertEquals("[]", empty.toStringR());
+        assertEquals("[]", empty.toString());
+        assertEquals(0, empty.size());
+    }
+
+    @Test
+    void testPrependAndToStringR() {
+
+        CList<Integer> nums= new CList<>();
+        nums.prepend(1);
+        nums.prepend(2);
+        nums.prepend(3);
+        assertEquals("[1, 2, 3]", nums.toStringR());
+//        assertEquals("[3, 2, 1]", nums.toString());
+        assertEquals(3, nums.size());
+
+        CList<Double> doub= new CList<>();
+        doub.prepend(5.9);
+        doub.prepend(4.9);
+        doub.prepend(3.0);
+        doub.prepend(8.9);
+        assertEquals("[5.9, 4.9, 3.0, 8.9]", doub.toStringR());
+//        assertEquals("[8.9, 3.0, 4.9, 5.9]", doub.toString());
+        assertEquals(4, doub.size());
+
+        CList<Character> ch= new CList<>();
+        ch.prepend('b');
+        ch.prepend('a');
+        assertEquals("[b, a]", ch.toStringR());
+//        assertEquals("[a, b]", ch.toString());
+        assertEquals(2, ch.size());
+
+    }
+
+    @Test
+    void testChangeHeadToNextAndAppend() {
+
+        CList<Integer> empty= new CList<>();
+        empty.append(1);
+        assertEquals("[1]", empty.toStringR());
+//        assertEquals("[1]", empty.toString());
+        assertEquals(1, empty.size());
+
+        CList<Character> some= new CList<>();
+        some.append('a');
+        some.append('b');
+        some.append('c');
+        some.append('d');
+        assertEquals("[d, c, b, a]", some.toStringR());
+//        assertEquals("[1]", empty.toString([a, b, c, d]));
+        assertEquals(4, some.size());
+
+        assertEquals('b', some.changeHeadToNext());
+//      assertEquals("[1]", empty.toString([b, c, d, a]));
+        assertEquals(4, some.size());
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+    public String toStringR() { // Note:
+        // TODO 1. In writing this, do NOT use fields size and head and the next fields.
+        // Use only field tail and the prev and data fields.
+        // Use the same scheme as in toString.
+
+        // You can't test this fully until #2, prepend, is written.
+        // Extreme case to watch out for: E is String and data items are the empty string.
+
+        if (head == null) return "[]";
+        StringBuilder sb= new StringBuilder("[");
+        Node n= tail;
+
+        while (n != head) {
+            sb.append(n.data);
+            sb.append(", ");
+            n= n.prev;
+        }
+        sb.append(head.data + "]");
+        return sb.toString();
+    }
+
+    /** Insert v at the beginning of the list. <br>
+     * This operation takes constant time.<br>
+     * E.g. if the list is [8, 7, 4], prepend(2) changes this list to [2, 8, 7, 4]. */
+    public void prepend(E v) {
+        // TODO 2. After writing this method, test this method and method
+        // toStringR throughly before starting on the next method.
+        // These two must be correct in order to be able to write and test all others.
+        if (head == null) {
+            head= new Node(null, v, null);
+            tail= head;
+        } else {
+            Node n= new Node(head.prev, v, head);
+            head.prev= n;
+            head= n;
+        }
+        size+= 1;
+    }
+
+    /** Change the head of this list to head.next and return the new head.<br>
+     * Thus, the head becomes the tail.<br>
+     * E.g. if the list is [] or [5], the list is unchanged.<br>
+     * E.g. With this list is [5, 3, 4, 6], calling the method <br>
+     * .... changes the list to [3, 4, 6, 5]. <br>
+     * This method takes constant time. */
+    public Node changeHeadToNext() {
+        // TODO 3.
+        if (size < 2) { return head; }
+
+        head= head.next;
+//        tail= head;
+
+        return head;
+
+    }
+
+    /** Add v to the end of this list. <br>
+     * This operation takes constant time.<br>
+     * E.g. if the list is [8, 7, 4], append(2) changes this list to [8, 7, 4, 2]. <br>
+     * E.g. if the list is ["AB"], append(null) changes the list to ["AB", null]. */
+    public void append(E v) {
+        // TODO 4. After writing writing this method, test it thoroughly before
+        // moving on to the next one.
+
+        if (head == null) {
+            head= new Node(head, v, tail);
+            tail= head;
+        } else {
+            Node n= new Node(null, v, null);
+            head.prev= n;
+            n.next= head;
+            n.prev= tail;
+            tail= n;
+        }
+        size+= 1;
+
+    }
