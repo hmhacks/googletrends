@@ -1,66 +1,80 @@
-// cap ssc install lassopack
-// cap ssc install pdslasso
-// cap ssc install putexcel
 /*
-Generates elasticnetBetas.xlsx. 
-
-Demo for model regularization. 
-
-
-
+Basic Fixed effect regression. 
 */
 
 clear all
+use "unemploymentMaster", clear
 
-import delimited "/Users/henrymanley/Desktop/Research/googletrends/Data/workingData.csv", clear
-drop _me stname
-tempfile data
-save `data'
+*Create lag/lead variables for search term. lag_unemployment ==. won't be regressed
+sort state year month 
+gen lag_unemployment = . 
+replace lag_unemployment = gunemployment[_n+1] if fips[_n-1] == fips[_n]
 
+gen lead_unemployment = .
+replace lead_unemployment = gunemployment[_n-1] if fips[_n-1] == fips[_n]
+order lead_unemployment lag_unemployment gunemployment
 
-	mata
-	void convert(){
-		ebic = st_matrix("r(ebic)")
-		M = colmin(ebic)
-		st_numscalar("r(Stmin)", M)
-	}
-	end
+//// Aggregate two-way fixed effects: 'unemployment'////
+xtset fips date
+xtreg unemployment_rate i.year i.month gunemployment, fe vce(robust)
 
+*Training runiform()
+set seed 123
+cap drop train yhat
+gen train = (runiform() > 0.5)
+xtreg unemployment_rate i.year i.month gunemployment if train, fe vce(robust) 
+scalar df = e(df_r)
+predict yhat if !train
 
-global terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
+preserve /// Test MSE. Reuse this code to compare models
+gen testMSE = unemployment_rate - yhat
+replace testMSE = (testMSE*testMSE)/df
+collapse (sum) testMSE
+scalar MSE = sqrt(testMSE[1])
+restore
 
-levelsof fips, local(states)
-*21 == dim == number of covariates
-// loc states = 1
-mat accum = J(1, 23, 0)
-foreach sta of local states {
+	* Visualize
+	line unemployment_rate yhat date if stname==`"New York"', sort
+	line unemployment_rate yhat date if stname=="Virginia", sort
+	line unemployment_rate yhat date if stname=="Maine", sort
+	line unemployment_rate yhat date if stname=="Wyoming", sort
+
+*Training (2008 > train < 2016, 2019 > test > 2016)
+cap drop train yhat
+gen train = 0 
+replace train = 1 if year < 2016
+xtreg unemployment_rate i.year i.month gunemployment if train, fe vce(robust)
+predict yhat if !train 
+
+	* Visualize
+	line unemployment_rate yhat date if stname=="California", sort
+	line unemployment_rate yhat date if stname=="Virginia", sort
+	line unemployment_rate yhat date if stname=="Maine", sort
+	line unemployment_rate yhat date if stname=="Wyoming", sort
 	
-	use `data', clear
-	qui keep if fips == `sta'
-	qui lasso2 unemployment_rate $terms, ols alpha(0.1) long
 	
-	mat rSq = r(rsq)
-	mat Betas = r(betas)
-	scalar dim = `=colsof(Betas)'
-	mata: convert()
-	scalar thresh = r(Stmin)
 	
-	loc count = 1
-	forval i = 1/`r(lcount)'{
-		if r(ebic)[`i', 1] == thresh {
-		
-			continue, break
-		}
-		local count = `count' + 1
-	}
-	
-	scalar rSq = rSq[`count', 1]
-	mat betas = Betas[`count', 1..dim]
-	mat accum = (accum \ `sta', betas, rSq)
-	mat colnames accum ="State" $terms "Constant" "r2"
-// 	lasso2, lic(ebic)
-}
+//// Aggregate two-way fixed effects with 1 mo.lag/leads: 'unemployment'////
 
-putexcel set "/Users/henrymanley/Desktop/Research/googletrends/Data/elasticnetBetas.xlsx", sheet("1") replace
-putexcel A1=matrix(accum), colnames
+*Lag
+cap drop train yhat
+gen train = (runiform() > 0.5)
+xtreg unemployment_rate i.year i.month lag_unemployment if train, fe vce(robust) 
+predict ylaghat if !train
+
+*Lead
+xtreg unemployment_rate i.year i.month lead_unemployment if train, fe vce(robust) 
+predict yleadhat if !train
+
+*None
+xtreg unemployment_rate i.year i.month gunemployment if train, fe vce(robust) 
+predict yhat if !train
+
+* Visualize
+	line unemployment_rate yhat ylaghat yleadhat date if stname=="California", sort
+	line unemployment_rate yhat ylaghat yleadhat date if stname=="Virginia", sort
+	line unemployment_rate yhat ylaghat yleadhat date if  stname=="Maine", sort
+	line unemployment_rate yhat ylaghat yleadhat date if  stname=="Wyoming", sort
+
+//// Aggregate two-way fixed effects: 'unemployment', 'google flights'////
 

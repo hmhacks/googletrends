@@ -6,6 +6,7 @@ ControlInteractions
 */
 
 clear all
+global data "/Users/henrymanley/Desktop/Research/googletrends/Data"
 global images "/Users/henrymanley/Desktop/Research/googletrends/Images"
 local terms = "vodka jobs lottery haircut spidersolitaire blooddrive brownierecipe xbox linkedin candycrush omegle harvard jobsnearme pornhub googleflights resumetemplate ebay gunemployment slutload calvinklein"
 
@@ -69,7 +70,7 @@ foreach y of local vlist{
 }
 duplicates drop month year fips, force
 
-save "unemploymentMaster", replace
+save "/$data/unemploymentMaster", replace
 
 merge 1:1 month year fips using `working', force
 keep if _me ==3
@@ -79,15 +80,15 @@ rename google_unemployment gunemployment
 
 *Generates interaction terms
 
-foreach term1 of local terms {
-	foreach term2 of local terms {
-		if `term1' != `term2' {
-			gen `term1'_`term2' = sqrt(`term1' * `term2')
-		}
-	}
-}
+// foreach term1 of local terms {
+// 	foreach term2 of local terms {
+// 		if `term1' != `term2' {
+// 			gen `term1'_`term2' = sqrt(`term1' * `term2')
+// 		}
+// 	}
+// }
 
-save "unemploymentMaster", replace
+save "/$data/unemploymentMaster", replace
 
 
 
