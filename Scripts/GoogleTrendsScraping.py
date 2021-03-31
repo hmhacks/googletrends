@@ -131,4 +131,6 @@ if __name__ == "__main__":
     # getGoogleTrends(['unemployment'], 2008, 2020)
     # getGoogleTrends(['google flights'], 2008, 2020)
     # getGoogleTrends(['pornhub'], 2008, 2020)
+    # getGoogleTrends(['haircut'], 2008, 2020)
+    # getGoogleTrends(['mens underwear'], 2008, 2020)
     GTC.mergeAllSearch()

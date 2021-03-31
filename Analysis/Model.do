@@ -146,6 +146,7 @@ xtreg unemployment_rate i.year i.month gunemployment googleflights pornhub if tr
 scalar df = e(df_r)
 predict yhat if !train
 
+
 * Calculate testMSE by state, creates matrix MSE
 preserve
 gen residual = unemployment_rate-yhat
@@ -169,19 +170,29 @@ restore
 // 	line unemployment_rate yhat date if stname=="Texas", sort
 // 	line unemployment_rate yhat date if stname=="Colorado", sort
 // 	line unemployment_rate yhat date if stname==`"Illinois"', sort
+
+// twoway ///
+// 	(line unemployment_rate yhat date if stname==`"Texas"', sort) ///
+// 	(lpoly yhat date if stname==`"Texas"')
+
 	
 	levelsof stname, local(states)
 	loc j = 1
 	
-	qui foreach sta of local states {
+	foreach sta of local states {
 		local MSE = MSE[`j', 1]
-		line unemployment_rate yhat date if stname==`"`sta'"', sort title(`"`sta'"') caption("Test MSE = `MSE'")
+		tw ///
+			(line unemployment_rate yhat date if stname==`"`sta'"', sort title(`"`sta'"') ///
+			caption("Test MSE = `MSE'") graphregion(color(white)) plotregion(color(white))) ///
+			(lpoly yhat date if stname==`"`sta'"')
 		
 		graph export "$images/`sta'_prediction.png", replace height(350) width(500)
 		loc j = `j' + 1
 	}
 
 	putpdf begin
+	putpdf paragraph
+	putpdf text ("Model Predctions")
 	putpdf table tb= matrix(MSE), rownames
 	putpdf pagebreak
 	putpdf paragraph, font("Garamond",20) halign(center)
