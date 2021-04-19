@@ -12,16 +12,19 @@ set graphics off
 global data "/Users/henrymanley/Desktop/Research/googletrends/Data"
 global images "/Users/henrymanley/Desktop/Research/googletrends/Images"
 use "$data/unemploymentMaster", clear
-xtset fips
+xtset fips 
+
+* https://www.stata.com/manuals/xtxtset.pdf what was the year by month variable. Use L., F. use these operators for time series to make this step easier L2. vs L.
 
 *Create lag/lead variables for search term. lag_unemployment ==. won't be regressed
-sort state year month 
+sort fips year month 
 gen lag_unemployment = . 
-replace lag_unemployment = gunemployment[_n+1] if fips[_n-1] == fips[_n]
+replace lag_unemployment = gunemployment[_n+1] if fips[_n+1] == fips[_n]
 
 gen lead_unemployment = .
 replace lead_unemployment = gunemployment[_n-1] if fips[_n-1] == fips[_n]
 order lead_unemployment lag_unemployment gunemployment
+*rename to gunemployment for the sake of organization
 
 ////////////////////////////////////////////////////////////////////////////
 //// Aggregate two-way fixed effects: 'unemployment'////////////////////////
@@ -34,6 +37,9 @@ set seed 123
 cap drop train yhat
 gen train = (runiform() > 0.5)
 xtreg unemployment_rate i.year i.month gunemployment if train, fe vce(robust) 
+
+* i.year##i.month equivalent
+* What was the average/median state in gunemployment over the time series where gunemployment goes from 100 to 40. Take take 0.6 and multiply that on beta gunemployment --> what would be the implied change in the actual unemployment_rate in this time frame. This helps to contextualize the meaning of beta. try running them all the models at same time --> xtreg lag lead norm
 scalar df = e(df_r)
 predict yhat if !train
 
@@ -113,6 +119,9 @@ replace deltaYUp = 1 if deltaY > 0
 ////////////////////////////////////////////////////////////////////////////
 //// Aggregate two-way fixed effects: 'unemployment', 'google flights'//////
 ////////////////////////////////////////////////////////////////////////////
+
+*estimates store name regs and save as little regression tables and be able to plot out the beta on gunemployemt, google flights etc. how does r^2 compare. Be able to present very easily. 
+
 cap drop train yhat
 gen train = 0 
 replace train = 1 if year < 2017
@@ -142,7 +151,8 @@ restore
 ////////////////////////////////////////////////////////////////////////////	
 cap drop train yhat
 gen train = (runiform() > 0.5)
-xtreg unemployment_rate i.year i.month gunemployment googleflights pornhub if train, fe vce(robust) 
+// xtreg unemployment_rate i.year i.month gunemployment googleflights pornhub if train, fe vce(robust) 
+reg unemployment_rate i.fips i.year i.month gunemployment googleflights pornhub if train, vce(robust) 
 scalar df = e(df_r)
 predict yhat if !train
 

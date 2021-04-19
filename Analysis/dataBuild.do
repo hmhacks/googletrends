@@ -3,7 +3,7 @@ Converts and merges all data into a .dta for analysis.
 */
 
 di "Building data from local csv's...'"
-qui{
+// qui{
 		
 	clear all
 	global data "/Users/henrymanley/Desktop/Research/googletrends/Data"
@@ -58,9 +58,14 @@ qui{
 
 	gen date = month + "/" + year
 	gen date1 = date(date, "MY")
+	gen compare = date1 
+	
+	sort state year month
+    by state: gen lag = date1[_n-1]
+	format lag %td
 	format date1 %td
+	rename date1 lead
 	drop date
-	rename date1 date
 
 
 	ds
@@ -71,12 +76,14 @@ qui{
 	duplicates drop month year fips, force
 
 	save "/$data/unemploymentMaster", replace
+	cap drop date
 
 	merge 1:1 month year fips using `working', force
 	keep if _me ==3
 
 	rename google_unemployment gunemployment
-
+// 	xtset fips 
+// 	tsset date, monthly
 
 	*Generates interaction terms
 
@@ -89,4 +96,4 @@ qui{
 	// }
 
 	save "/$data/unemploymentMaster", replace
-	}
+	
