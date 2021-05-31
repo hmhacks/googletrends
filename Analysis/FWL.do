@@ -17,6 +17,8 @@ use "$data/unemploymentMaster", clear
 drop date
 drop if state =="District of Columbia" | state == "Los Angeles County"
 gen rel_unemployment = 0
+
+
 levelsof state, loc(states)
 loc states = `" `states' "'
 foreach state in `states'{
@@ -25,13 +27,30 @@ foreach state in `states'{
 	replace rel_unemployment = 100* unemployment_rate/`r(max)' if state =="`state'"
 }
 
-rename lag date
+
 * Calculate residuals
-reg rel_unemployment date i.year i.month i.fips, robust
+reg unemployment_rate i.year##i.month i.fips, robust
 predict resY, residuals
 
-reg gunemployment date i.year i.month i.fips, robust
+reg gunemployment i.year i.month i.fips, robust
 predict resX, residuals
+
+* Keep only a handful of states to observe and write to pdf
+preserve
+loc i = 1
+matrix A = J(49,1,0)
+foreach state in `states' {
+	reg gunemployment lag if state =="`state'", robust
+	mat A[`i',1] = r(table)[1,1]
+	loc i = `i' + 1
+}
+svmat A, names(beta)
+
+keep if beta1!=.
+sort beta1
+keep if _n==1 | mod(_n, 7) == 0
+levelsof state, loc(states)
+restore
 
 *Compresses the PDF
 putpdf begin
@@ -43,28 +62,28 @@ foreach state in `states'{
 	noisily di "`state'"
 	qui {
 		* Plot residuals
-		gr tw scatter resY resX date if state =="`state'", ///
+		gr tw scatter resY resX lag if state =="`state'", ///
 			graphregion(color(white)) plotregion(color(white)) ///
 			xtitle("Time")  ytitle("Residualized Rate") title("Residuals", color(black)) ///
 			msymbol(o o) msize(small small) mcolor(black red) xlabel(, alternate) ///
 			legend(cols(1) region(lstyle(none)) label(1 "Rel. Unemployment Rate x FE") label(2 "G-Unemployment x FE"))
 			gr save "residuals_`state'.gph", replace
-			
-		gr tw scatter rel_unemployment gunemployment date if state =="`state'", ///
+
+		gr tw scatter unemployment_rate gunemployment lag if state =="`state'", ///
 			graphregion(color(white)) plotregion(color(white))  ///
 			xtitle("Time")  ytitle("Rate") title("Time Series", color(black)) ///
 			msymbol(o o) msize(small small) mcolor(black red) xlabel(, alternate) ///
 			legend(cols(1) region(lstyle(none)) label(1 "Rel. Unemployment Rate") label(2 "G-Unemployment"))
 			gr save "timeseries_`state'.gph", replace
-			
+
 		gr combine "timeseries_`state'" "residuals_`state'", ///
 			title("Residualized Estimates v. Time Series - `state'", color(black)) ///
 			graphregion(color(white)) plotregion(color(white))
 			gr export "timeseries_`state'.png"
-			
+
 		putpdf image "timeseries_`state'.png"
 		putpdf paragraph
-		
+
 		erase "timeseries_`state'.png"
 		erase "timeseries_`state'.gph"
 		erase "residuals_`state'.gph"
@@ -72,7 +91,3 @@ foreach state in `states'{
 }
 
 putpdf save "$images/FWL.pdf", replace
-*make unemployment relative and then graph
-*every other on x axis 
-* iterate through each state and compress new pdf
-* keep writing a bit --> more literature analysis

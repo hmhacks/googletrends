@@ -1,7 +1,7 @@
 """
 This script creates a state level Google search query dataset.
 
-Henry Manley - hjm67@cornell.edu -  Last Modified 2/8/2021
+Henry Manley - hjm67@cornell.edu -  Last Modified 5/25/2021
 """
 from pytrends.request import TrendReq
 import time
@@ -9,9 +9,8 @@ import pandas as pd
 import GoogleTrendsCleaning as GTC
 import requests
 
-pytrends = TrendReq()
+pytrends = TrendReq(retries=10, backoff_factor=0.5)
 
-# stateList = ['NY', 'IL']
 
 stateList = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
@@ -19,23 +18,23 @@ stateList = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
 
-def getGoogleTrends(termList, yearStart, yearEnd):
+def getGoogleTrends(termList, yearStart, yearEnd, keywordList=False):
     """
     Returns desired dataset of Google search queries over time.
 
-    Parameter termList represents the search terms to request.
+    @param termList represents the search terms to request.
     Preconditon: termList a list of strings
 
-    Parameter yearStart is the lower bound of the time series.
+    @param yearStart is the lower bound of the time series.
     Preconditon: yearStart is an int
 
-    Parameter yearEnd is the upper bound of the time series.
+    @param yearEnd is the upper bound of the time series.
     Preconditon: yearEnd is an int
     """
     assert type(termList) == list
 
     for term in termList:
-        assert type(term) == str
+        assert type(term) == str or type(term) == list
 
     #Determine sleep time between term requests
     months = 12
@@ -43,6 +42,7 @@ def getGoogleTrends(termList, yearStart, yearEnd):
     timeframe = months*(yearEnd - yearStart)
 
     accum = pd.DataFrame()
+
     iter = 0
     for x in range(len(termList)):
         for y in range(len(stateList)):
@@ -50,21 +50,18 @@ def getGoogleTrends(termList, yearStart, yearEnd):
             stateQuery = 'US-' + stateList[y]
 
             if (iter + 1)* timeframe < googleLimit:
+                if keywordList:
+                    data = makeRequest(termList[0], yearStart, yearEnd, stateQuery)
+                    time.sleep(1)
+                else:
+                    data = makeRequest([termList[x]], yearStart, yearEnd, stateQuery)
+                    time.sleep(1)
 
-                data = makeRequest([termList[x]], yearStart, yearEnd, stateQuery)
                 data['State'] = stateList[y]
                 accum = accum.append(data)
-
                 iter += 1
 
-            # else:
-            #     time.sleep(90000)
-            #     data = makeRequest([termList[x]], yearStart, yearEnd, stateQuery)
-            #     data['State'] = stateList[y]
-            #     accum = accum.append(data)
-            #     iter = 1
-
-        filename = '../Data/SearchTerms/' + termList[x] + '.csv'
+        filename = '../Data/SearchTerms/' + str(termList[x]) + '.csv'
         accum.to_csv(filename, index=True, encoding='utf_8_sig')
         accum = pd.DataFrame()
 
@@ -74,16 +71,16 @@ def makeRequest(term, yearStart, yearEnd, stateQuery):
     Builds payload and makes request to Google Trends API.
     Returns request data.
 
-    Parameter term is the kw_list parameter being requested.
+    @param term is the kw_list parameter being requested.
     Preconditon term is a list with len 1 (one word at at time)
 
-    Parameter yearStart is the lower bound of the time series.
+    @param yearStart is the lower bound of the time series.
     Preconditon: yearStart is an int
 
-    Parameter yearEnd is the upper bound of the time series.
+    @param yearEnd is the upper bound of the time series.
     Preconditon: yearEnd is an int
 
-    Parameter stateQuery is the state parameter being requested
+    @param stateQuery is the state parameter being requested
     Preconditon: stateQuery is a string of format "US-NY", eg.
     """
     try:
