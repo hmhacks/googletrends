@@ -12,10 +12,5 @@ Predicting labor market measures with trends in Google search queries.
 * [pytrends](https://pypi.org/project/pytrends/)
 * [BLS](https://www.bls.gov/developers/api_python.htm)
 
-## Current Status
-* Need to connect the BLSScraper to a Google VM.
-* Merge on local time variations.
-* Design the model.
-
 ## Notes
 This project is part of my Cornell University Department of Policy Analysis and Management Senior Thesis.

@@ -3,7 +3,6 @@ This script parses text and generates a list of most frequent keywords.
 
 Henry Manley - hjm67@cornell.edu -  Last Modified 5/25/2021
 """
-
 from collections import Counter
 import PyPDF2
 import os
@@ -13,7 +12,8 @@ from nltk.tokenize import word_tokenize
 
 try:
     os.remove("../Data/fed2021.txt")
-except:
+except Exception as e:
+    print(e)
     pass
 
 
