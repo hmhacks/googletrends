@@ -49,6 +49,8 @@ def makeNormalizedRequest(keywords, yearStart, yearEnd):
             gData = mData
         i += 1
 
-    gData.to_csv('../Data/SearchTerms/MASTERDATA.csv', index=True)
+    oldData = pd.read_csv('../Data/SearchTerms/MASTERDATA.csv')
+    newData = gData.merge(oldData, left_on=['date', 'state'], right_on = ['date', 'state'])
+    newData.to_csv('../Data/SearchTerms/MASTERDATA.csv', index=True)
 
-makeNormalizedRequest(fed, 2004, 2020)
+# makeNormalizedRequest(DAmuri2017, 2004, 2020)
