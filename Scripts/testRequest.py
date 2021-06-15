@@ -5,9 +5,6 @@ import gtab
 import traceback
 from globals import *
 from proxies import *
-from datetime import date, timedelta
-from calendar import monthrange
-import time as tF
 
 
 
@@ -39,11 +36,11 @@ def timeEstimate(keywords, waitTime):
     @param waitTIme is the sleep time specified in makeNormalizedRequest().
     """
     requestN = len(keywords) * 50
-    requestT = requestN/10  + requestN*waitTime
+    requestT = requestN/10 * requestN*waitTime
     return [requestN, requestT]
 
 
-def makeNormalizedRequest(keywords, yearStart, yearEnd, fileName, waitTime = 0):
+def makeNormalizedRequest(list: keywords, yearStart, yearEnd, string: fileName, waitTime = 0):
     """
     Master request function. This procedure returns a data set of normalized search
     intensities requested from the Google Trends API. To obtain and evaluate precise
@@ -58,12 +55,18 @@ def makeNormalizedRequest(keywords, yearStart, yearEnd, fileName, waitTime = 0):
     assert type(keywords) == list
     assert type(fileName) == str
 
+    # Initialize Proxies
+    proxies = list(get_proxies())
+    # proxies = []
+    print(proxies)
+    url = 'https://httpbin.org/ip'
+
     # Get Time Estimate
     time = timeEstimate(keywords, waitTime)[0]
 
     # Set request time parameters
-    start_date = date(yearStart, 1, 1)
-    stop_date = get_last_date_of_month(yearEnd, 12)
+    start_date = date(yearStart, start_mon, 1)
+    stop_date = get_last_date_of_month(yearEnd, stop_mon)
     timeframe = convert_dates_to_timeframe(start_date, stop_date)
 
     # Set Anchor. Initialize GTAB.
@@ -73,15 +76,16 @@ def makeNormalizedRequest(keywords, yearStart, yearEnd, fileName, waitTime = 0):
     for state in stateList:
         geo = 'US-' + state
         init = gtab.GTAB()
-        init.set_options(pytrends_config={"geo": geo, "timeframe": timeframe})
+        init.set_options(pytrends_config={"geo": geo, "timeframe": timeframe},
+            conn_config={"proxies": proxies, "retries" : 3})
 
         # Request. Try proxy until it works.
         j = 1
         for word in keywords:
             # Sleep and Progress Display
-            tF.sleep(waitTime)
+            time.sleep(waitTime)
             progress += 1
-            print(fileName + "- "  + str(progress) + " requests out of " + str(time) + " made.")
+            print(filename + "- " str(progress) + " requests out of " + str(time) + " made.")
 
             # Skip bad keywords
             if i != 1:
@@ -103,7 +107,7 @@ def makeNormalizedRequest(keywords, yearStart, yearEnd, fileName, waitTime = 0):
 
             except Exception as e:
                 if i == 1:
-                    badKeywords.append(word)
+                    badKeywords = word.append(badKeywords)
 
         mData['state'] = state
 
@@ -114,11 +118,13 @@ def makeNormalizedRequest(keywords, yearStart, yearEnd, fileName, waitTime = 0):
             gData = mData
         i += 1
 
+    oldData = pd.read_csv('../Data/SearchTerms/' + fileName + '.csv')
     gData.date.astype('datetime64[ns]')
-    # gData['date'] = gData['date'].dt.strftime("%Y%m%d").astype(int)
+    oldData.date.astype('datetime64[ns]')
+    gData['date'] = gData['date'].dt.strftime("%Y%m%d").astype(int)
     gData.to_csv('../Data/SearchTerms/' + fileName + '.csv', index=True)
 
-makeNormalizedRequest(work[:2], 2004, 2020, 'work', 1)
+makeNormalizedRequest(work, 2004, 2020, 'work', 5)
 # makeNormalizedRequest(fed, 2004, 2020, 'fed', 5)
 # makeNormalizedRequest(shakespeare, 2004, 2020, 'shakespeare', 5)
 # makeNormalizedRequest(google, 2004, 2020, 'google', 5)

@@ -4,6 +4,11 @@ Model Horserace. Configure and access Stata from Python.
 Henry Manley - hjm67@cornell.edu -  Last Modified 5/31/2021
 """
 
+"""
+reg w/ lag1 california time series
+stata's time series L. --> define time series / use time series operators
+"""
+
 import stata_setup
 stata_setup.config('/Applications/Stata/', 'be')
 
@@ -12,15 +17,19 @@ from sfi import Macro
 from globals import *
 import os
 
+print(fed)
 stata.config.init('be')
 stata.config.set_graph_show(True, perm=False)
 path = os.path.abspath(os.path.join(os.getcwd(),".."))
 Macro.setGlobal('data', path + '/Data')
 Macro.setGlobal('analysis', path + '/Analysis')
 
+Macro.setGlobal('keywords', " ".join(fed))
+
 # Build global data
 stata.run(
     """
+    nois di "1 $keywords"
     * State fips
     import delimited "$data/statefips.csv", clear
 	rename stusps state
@@ -105,13 +114,23 @@ stata.run(
         *gen train = (date > )
     end
 
-    cap prog drop testMSE
-    prog def testMSE
+    cap prog drop testRMSE
+    prog def testRMSE
+        syntax, [state(string)]
         preserve
-        gen testMSE = unemployment_rate-yhat
-        replace testMSE = (testMSE*testMSE)/df
+
+        if "`state'"!= ""{
+            gen testMSE = unemployment_rate-yhat if stname == "`state'"
+            count if stname == "`state'"
+            replace testMSE = (testMSE*testMSE)/r(N)
+        }
+        else {
+            gen testMSE = unemployment_rate-yhat
+            replace testMSE = (testMSE*testMSE)/_N
+        }
+
         collapse (sum) testMSE
-        scalar MSE = sqrt(testMSE[1])
+        scalar RMSE = sqrt(testMSE[1])
         restore
     end
     """
@@ -120,31 +139,35 @@ stata.run(
 
 # Model 1 - Naive Federal Reserve Minutes (Top 10 words)
 # Unemployment ~ State + (Year * Month) + χ(FedKeywords) + ε
-Macro.setGlobal('keywords', " ".join(pyStrToStaLoc(fed)))
 stata.run(
     """
+    nois di "2 $keywords"
     configStata
     splitData, seed(101)
 
     xtreg unemployment_rate i.year##i.month $keywords if train, fe vce(robust)
     scalar df = e(df_r)
     predict yhat if !train
-    testMSE
+    testRMSE, state("California")
+    loc RMSE = RMSE
 
-    line unemployment_rate yhat date if stname=="California", sort
-    graph export model1.png, replace
+    line unemployment_rate yhat date if stname=="California", sort ///
+    caption("RMSE = `RMSE'")
+    graph export model1CA.png, replace
+
+    line unemployment_rate yhat date if stname=="Arizona", sort
+    graph export model1AZ.png, replace
     """
 )
 
 # Model 2 - LASSO Selected Federal Reserve Minutes
 # Unemployment ~ State + (Year * Month) + χ(FedKeywords) + ε
-Macro.setGlobal('keywords', " ".join(pyStrToStaLoc(fed)))
 stata.run(
     """
     configStata
     splitData, seed(101)
 
-    lasso linear unemployment_rate $keywords (i.year##i.month) if train
+    lasso linear unemployment_rate (i.year##i.month) $keywords
     lassocoef
     ret li
 
@@ -155,14 +178,19 @@ stata.run(
 
     scalar df = e(df_r)
     predict yhat if !train
-    testMSE
+    testRMSE, state("California")
+    loc RMSE = RMSE
 
-    line unemployment_rate yhat date if stname=="California", sort
-    graph export model2.png, replace
+    line unemployment_rate yhat date if stname=="California", sort ///
+    caption("RMSE = `RMSE'")
+    graph export model2CA.png, replace
+
+    line unemployment_rate yhat date if stname=="Arizona", sort
+    graph export model2AZ.png, replace
     """
 )
 
-# Model 3 - LASSO Selected Federal Reserve Minutes & 1/2 Month Lags, no Time FEs
+# Model 3 - General AR (1&2 month lags)
 # Unemployment ~ L1.Unemployment + L2.Unemployment + State + χ(FedKeywords) + ε
 Macro.setGlobal('keywords', " ".join(pyStrToStaLoc(fed)))
 stata.run(
@@ -174,9 +202,36 @@ stata.run(
     by fips: gen lag1 = unemployment_rate[_n-1]
     by fips: gen lag2 = unemployment_rate[_n-2]
 
-    list in 1/4
+    * drop train first to confirm no issue here
+    xtreg unemployment_rate lag1 if train, fe vce(robust)
 
-    lasso linear unemployment_rate $keywords (lag1 lag2 i.year##i.month) if train
+    scalar df = e(df_r)
+    predict yhat if !train
+    testRMSE, state("California")
+    loc RMSE = RMSE
+
+    line unemployment_rate yhat date if stname=="California", sort ///
+    caption("RMSE = `RMSE'")
+    graph export model3CA.png, replace
+
+    line unemployment_rate yhat date if stname=="Arizona", sort
+    graph export model3AZ.png, replace
+    """
+)
+
+# Model 4 - LASSO Selected Federal Reserve Minutes & 1/2 Month Lags, no Time FEs
+# Unemployment ~ L1.Unemployment + L2.Unemployment + State + χ(FedKeywords) + ε
+Macro.setGlobal('keywords', " ".join(fed))
+stata.run(
+    """
+    configStata
+    splitData, seed(101)
+
+    sort fips year month
+    by fips: gen lag1 = unemployment_rate[_n-1]
+    by fips: gen lag2 = unemployment_rate[_n-2]
+
+    lasso linear unemployment_rate (lag1 lag2 i.year##i.month) $keywords
     lassocoef
     ret li
 
@@ -187,17 +242,22 @@ stata.run(
 
     scalar df = e(df_r)
     predict yhat if !train
-    testMSE
+    testRMSE, state("California")
+    loc RMSE = RMSE
 
-    line unemployment_rate yhat date if stname=="California", sort
-    graph export model3.png, replace
+    line unemployment_rate yhat date if stname=="California", sort ///
+    caption("RMSE = `RMSE'")
+    graph export model4CA.png, replace
+
+    line unemployment_rate yhat date if stname=="Arizona", sort
+    graph export model4AZ.png, replace
     """
 )
 
 
-# Model 4 - D'Amuri2017 Autoregressive model
+# Model 5 - D'Amuri2017 Autoregressive model
 # Unemployment ~ L1.Unemployment + L2.Unemployment + State + χ(Keywords) + ε
-Macro.setGlobal('keywords', " ".join(fed))
+Macro.setGlobal('keywords', " ".join(pyStrToStaLoc(fed)))
 stata.run(
     """
     configStata
@@ -213,17 +273,20 @@ stata.run(
     forval i = 1/5{
         by fips: gen lead`i' = unemployment_rate[_n+`i']
     }
+
+    list in 1/3
+
     gen lead0 = unemployment_rate
 
     forval i = 0/5{
         xtreg lead`i' lag1 lag2 $keywords, fe vce(robust)
         scalar df = e(df_r)
         predict yhat`i'
-        *testMSE
+        *testRMSE
     }
     line unemployment_rate yhat* date if stname=="California", sort ///
         graphregion(color(white)) plotregion(color(white)) ///
         title("Autoregressive Forecasting U3")
-    graph export model4.png, replace
+    graph export model5CA.png, replace
     """
 )

@@ -65,12 +65,12 @@ def parsePDF(infile, outfile):
     for page in range(numPages):
         pageobj = pdfreader.getPage(page)
         text=pageobj.extractText()
-        file=open(outfile,'a')
+        file=open(outfile,'w')
         file.writelines(text)
 
 if __name__ == "__main__":
     parsePDF('../Data/fomc2021.pdf', "../Data/fed2021.txt")
-    fed = getKeywords("../Data/fed2021.txt", 20)
+    # fed = getKeywords("../Data/fed2021.txt", 20)
     shakespeare =getKeywords('../Data/shakespeare.txt', 20)
-    print(fed)
+    # print(fed)
     print(shakespeare)
