@@ -4,18 +4,13 @@ This script parses text and generates a list of most frequent keywords.
 Henry Manley - hjm67@cornell.edu -  Last Modified 5/25/2021
 """
 from collections import Counter
+import urllib.request
 import PyPDF2
 import os
+import re
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-
-try:
-    os.remove("../Data/fed2021.txt")
-except Exception as e:
-    print(e)
-    pass
-
 
 def getKeywords(file, num):
     """
@@ -31,7 +26,8 @@ def getKeywords(file, num):
     text_tokens = word_tokenize(text)
     text_tokens = [x.lower() for x in text_tokens]
 
-    stop = stopwords.words('english') + [',','.', '?', ':', ';', "'"] + ['doth', 'hath', 'thou', 'thy', 'thee', 'yet', 'thine']
+    stop = stopwords.words('english') + [',','.', '?', ':', ';', "'", ')', '(', '$', '']
+    stop = stop + ['doth', 'hath', 'thou', 'thy', 'thee', 'yet', 'thine']
 
     for i in stop:
         try:
@@ -41,6 +37,9 @@ def getKeywords(file, num):
 
     filtered = (" ").join(text_tokens)
     split_it = filtered.split()
+    split_it = [word for word in split_it if len(word) > 2]
+    split_it = [word for word in split_it if re.match(r'^-?\d+(?:\.\d+)$', word) is None]
+
     count = Counter(split_it)
     most_occur = count.most_common(num)
     most_occur = [x[0] for x in most_occur]
@@ -63,14 +62,26 @@ def parsePDF(infile, outfile):
         pdfreader.decrypt('')
 
     for page in range(numPages):
+        print(page)
         pageobj = pdfreader.getPage(page)
         text=pageobj.extractText()
-        file=open(outfile,'w')
-        file.writelines(text)
+        with open(outfile,'a') as file:
+            file.write(text)
+
+
+
+def getTexts(url, outfile):
+    """
+    Downloads file from specified url to local memory.
+
+    @param url is the url to download data from.
+    @param outfile is the path to write to. Extension must match file type.
+    """
+    urllib.request.urlretrieve(url, outfile)
+
 
 if __name__ == "__main__":
-    parsePDF('../Data/fomc2021.pdf', "../Data/fed2021.txt")
-    # fed = getKeywords("../Data/fed2021.txt", 20)
-    shakespeare =getKeywords('../Data/shakespeare.txt', 20)
-    # print(fed)
-    print(shakespeare)
+    parsePDF('../Data/FOMC20210127.pdf', "../Data/fed2021.txt")
+    fedTest = getKeywords('../Data/fed2021.txt', 20)
+    print(fedTest)
+    os.remove('../Data/fed2021.txt')

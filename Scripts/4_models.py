@@ -17,7 +17,6 @@ from sfi import Macro
 from globals import *
 import os
 
-print(fed)
 stata.config.init('be')
 stata.config.set_graph_show(True, perm=False)
 path = os.path.abspath(os.path.join(os.getcwd(),".."))
@@ -39,7 +38,8 @@ stata.run(
 
     * Search Terms
     import delimited "$data/SearchTerms/MASTERDATA", clear
-    gen month = substr(date, 6,2)
+    tostring date, replace
+    gen month = substr(date, 5,2)
     gen year = substr(date,1, 4)
 	destring month, replace
 	destring year, replace
@@ -82,11 +82,11 @@ stata.run(
 	duplicates drop month year fips, force
 
 	save "/$data/unemploymentMaster", replace
-
+    
 	merge 1:1 month year fips using `working', force
 	keep if _me ==3
     drop _me
-
+    save "/$data/TEST", replace
     """)
 
 # Stata Config. & Training - Testing Split & Test MSE Function

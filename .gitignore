@@ -1,4 +1,5 @@
-./Images/interactionControls.pdf
 ./Images/.DS_Store
-./Images/FWL.pdf
 ./Data
+**/__pycache__
+*.txt
+*.pdf
