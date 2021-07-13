@@ -183,7 +183,8 @@ end
 *******************************************************************************
 ********************** Autoregressive Regression ******************************
 *******************************************************************************
-
+cap prog drop ARreg
+prog def ARregreg
 buildData
 ds *_d 
 local dlist = r(varlist)
@@ -199,11 +200,13 @@ gen unemployment_lead_0 = unemployment_rate_d
 
 xtset fips
 forval i = 0/5{
-	xtreg unemployment_lead_`i' unemployment_lag_1 unemployment_lag_2 `dlist', fe vce(robust)
+	xtreg unemployment_lead_`i' unemployment_lag_1 unemployment_lag_2, fe vce(robust)
 	scalar df = e(df_r)
 	predict yhat`i'
    
 }
-line unemployment_rate yhat date if state=="California", sort ///
+
+line unemployment_lead_1 yhat1 date if state=="California", sort ///
 	graphregion(color(white)) plotregion(color(white)) ///
 	title("Autoregressive Forecasting U3")
+end

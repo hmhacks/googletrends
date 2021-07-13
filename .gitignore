@@ -1,5 +1,5 @@
-./Images/.DS_Store
 ./Data
 **/__pycache__
+**/.DS_Store
 *.txt
 *.pdf

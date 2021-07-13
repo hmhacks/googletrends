@@ -35,8 +35,7 @@ for text in fedTexts:
     parsePDF(outfile, "../Data/FOMC2021.txt")
     i += 1
 
-fed = getKeywords("../Data/FOMC2021.txt", numKeywords)
-
+fed = LDA('../Data/fed2021.txt', 3, numKeywords)
 
 
 ################################################################################
@@ -44,7 +43,7 @@ fed = getKeywords("../Data/FOMC2021.txt", numKeywords)
 ################################################################################
 
 getTexts('https://github.com/brunoklein99/deep-learning-notes/blob/master/shakespeare.txt', '../Data/FOMC2021.txt')
-shakespeare = getKeywords('../Data/shakespeare.txt', numKeywords)
+shakespeare = LDA('../Data/shakespeare.txt', 5, numKeywords)
 
 
 ################################################################################
@@ -66,7 +65,7 @@ for text in BLSTexts:
     parsePDF(outfile, "../Data/BLS2021.txt")
     i += 1
 
-bls = getKeywords('../Data/BLS2021.txt', numKeywords)
+bls = LDA('../Data/BLS2021.txt', 4, numKeywords)
 
 
 ################################################################################
@@ -86,7 +85,7 @@ google = ['free apps', 'guitar scales beginner', 'companies that are hiring']
 #From D'Amuri 2017 https://www.sciencedirect.com/science/article/pii/S0169207017300389#br000180
 ################################################################################
 
-dAmuri2017 = ['jobs', 'facebook', 'youtube']
+dAmuri2017 = ['jobs', 'facebook', 'youtube', 'job center', 'collect unemployment']
 
 
 
