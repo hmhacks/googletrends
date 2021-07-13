@@ -45,5 +45,5 @@ and regression functions. Further analysis is done in `analysis.py`.
 
 
 ## Notes
-This project is the codebase for my senior thesis in the Department of Policy Analysis and Management
-at Cornell University.
+This project is the codebase for my senior thesis in the Department of [Policy Analysis and Management](https://www.human.cornell.edu/pam)
+at Cornell University and is advised by [Dr. Douglas Miller](https://www.nber.org/people/douglas_miller?page=1&perPage=50).
